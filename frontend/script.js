@@ -74,7 +74,10 @@ async function sendMessage() {
             })
         });
 
-        if (!response.ok) throw new Error('Query failed');
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Server error (${response.status}): ${errorText}`);
+        }
 
         const data = await response.json();
         
@@ -88,9 +91,19 @@ async function sendMessage() {
         addMessage(data.answer, 'assistant', data.sources);
 
     } catch (error) {
-        // Replace loading message with error
+        // Replace loading message with detailed error
         loadingMessage.remove();
-        addMessage(`Error: ${error.message}`, 'assistant');
+        let errorMessage = 'Unable to process your query';
+        
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            errorMessage = 'Network connection error - please check if the server is running';
+        } else if (error.message.includes('JSON')) {
+            errorMessage = 'Server response format error';
+        } else if (error.message) {
+            errorMessage = error.message;
+        }
+        
+        addMessage(`Error: ${errorMessage}`, 'assistant');
     } finally {
         chatInput.disabled = false;
         sendButton.disabled = false;

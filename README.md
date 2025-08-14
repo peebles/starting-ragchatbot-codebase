@@ -47,10 +47,43 @@ chmod +x run.sh
 
 ```bash
 cd backend
-uv run uvicorn app:app --reload --port 8000
+uv run uvicorn app:app --reload --port 9000
 ```
 
 The application will be available at:
-- Web Interface: `http://localhost:8000`
-- API Documentation: `http://localhost:8000/docs`
+- Web Interface: `http://localhost:9000`
+- API Documentation: `http://localhost:9000/docs`
+
+## Testing
+
+### Running Unit Tests
+
+The project includes comprehensive unit tests for all components:
+
+```bash
+# Install test dependencies
+uv sync
+
+# Run all tests
+uv run pytest tests/ -v
+
+# Run specific test files
+uv run pytest tests/test_search_tools.py -v
+uv run pytest tests/test_ai_generator.py -v
+uv run pytest tests/test_rag_system.py -v
+
+# Run tests with detailed output
+uv run pytest tests/ -v -s
+
+# Run diagnostic tests to check system health
+uv run pytest tests/test_system_diagnostics.py -v -s
+```
+
+### Test Coverage
+
+- **`test_search_tools.py`**: Tests CourseSearchTool and CourseOutlineTool functionality
+- **`test_ai_generator.py`**: Tests AI response generation and tool calling logic
+- **`test_rag_system.py`**: Integration tests for the complete RAG workflow
+- **`test_system_diagnostics.py`**: System health and configuration validation tests
+- **`test_live_system.py`**: End-to-end tests with real data and API calls
 
