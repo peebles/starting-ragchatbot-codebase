@@ -17,9 +17,12 @@ class SearchResults:
     def from_chroma(cls, chroma_results: Dict) -> 'SearchResults':
         """Create SearchResults from ChromaDB query results"""
         return cls(
-            documents=chroma_results['documents'][0] if chroma_results['documents'] else [],
-            metadata=chroma_results['metadatas'][0] if chroma_results['metadatas'] else [],
-            distances=chroma_results['distances'][0] if chroma_results['distances'] else []
+            documents=(chroma_results['documents'][0] if chroma_results.get('documents') and 
+                      len(chroma_results['documents']) > 0 else []),
+            metadata=(chroma_results['metadatas'][0] if chroma_results.get('metadatas') and 
+                     len(chroma_results['metadatas']) > 0 else []),
+            distances=(chroma_results['distances'][0] if chroma_results.get('distances') and 
+                      len(chroma_results['distances']) > 0 else [])
         )
     
     @classmethod
@@ -111,11 +114,26 @@ class VectorStore:
                 n_results=1
             )
             
-            if results['documents'][0] and results['metadatas'][0]:
-                # Return the title (which is now the ID)
-                return results['metadatas'][0][0]['title']
+            # Check if we have any results
+            if (results and 'documents' in results and results['documents'] and 
+                len(results['documents']) > 0 and len(results['documents'][0]) > 0):
+                
+                # Check if we have metadata
+                if (results['metadatas'] and len(results['metadatas']) > 0 and 
+                    len(results['metadatas'][0]) > 0):
+                    
+                    # Check distance if available
+                    if (results['distances'] and len(results['distances']) > 0 and 
+                        len(results['distances'][0]) > 0):
+                        distance = results['distances'][0][0]
+                        # Distance threshold: 0.8 means reasonably similar (lower is better)
+                        if distance < 0.8:
+                            return results['metadatas'][0][0]['title']
+                    else:
+                        # No distance info available, return first match
+                        return results['metadatas'][0][0]['title']
         except Exception as e:
-            print(f"Error resolving course name: {e}")
+            print(f"Error resolving course name '{course_name}': {e}")
         
         return None
     
