@@ -5,7 +5,7 @@ const API_URL = '/api';
 let currentSessionId = null;
 
 // DOM elements
-let chatMessages, chatInput, sendButton, totalCourses, courseTitles;
+let chatMessages, chatInput, sendButton, totalCourses, courseTitles, newChatButton;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     sendButton = document.getElementById('sendButton');
     totalCourses = document.getElementById('totalCourses');
     courseTitles = document.getElementById('courseTitles');
+    newChatButton = document.getElementById('newChatButton');
     
     setupEventListeners();
     createNewSession();
@@ -29,6 +30,8 @@ function setupEventListeners() {
         if (e.key === 'Enter') sendMessage();
     });
     
+    // New chat button
+    newChatButton.addEventListener('click', clearChat);
     
     // Suggested questions
     document.querySelectorAll('.suggested-item').forEach(button => {
@@ -122,10 +125,25 @@ function addMessage(content, type, sources = null, isWelcome = false) {
     let html = `<div class="message-content">${displayContent}</div>`;
     
     if (sources && sources.length > 0) {
+        // Process sources to make them clickable if they contain embedded links
+        const processedSources = sources.map(source => {
+            // Check if source contains embedded link (format: "display_text|link_url")
+            if (source.includes('|')) {
+                const parts = source.split('|');
+                const displayText = parts[0];
+                const linkUrl = parts[1];
+                // Create clickable link that opens in new tab
+                return `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer">${displayText}</a>`;
+            } else {
+                // No embedded link, return as plain text
+                return source;
+            }
+        });
+        
         html += `
             <details class="sources-collapsible">
                 <summary class="sources-header">Sources</summary>
-                <div class="sources-content">${sources.join(', ')}</div>
+                <div class="sources-content">${processedSources.join(', ')}</div>
             </details>
         `;
     }
@@ -150,6 +168,47 @@ async function createNewSession() {
     currentSessionId = null;
     chatMessages.innerHTML = '';
     addMessage('Welcome to the Course Materials Assistant! I can help you with questions about courses, lessons and specific content. What would you like to know?', 'assistant', null, true);
+}
+
+async function clearChat() {
+    try {
+        // Clear backend session if one exists
+        if (currentSessionId) {
+            const response = await fetch(`${API_URL}/clear-session`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    session_id: currentSessionId
+                })
+            });
+            
+            if (!response.ok) {
+                console.warn('Failed to clear backend session:', response.statusText);
+            }
+        }
+        
+        // Clear frontend state
+        currentSessionId = null;
+        chatMessages.innerHTML = '';
+        
+        // Add welcome message
+        addMessage('Welcome to the Course Materials Assistant! I can help you with questions about courses, lessons and specific content. What would you like to know?', 'assistant', null, true);
+        
+        // Clear input field and focus
+        chatInput.value = '';
+        chatInput.focus();
+        
+    } catch (error) {
+        console.error('Error clearing chat:', error);
+        // Still clear frontend even if backend fails
+        currentSessionId = null;
+        chatMessages.innerHTML = '';
+        addMessage('Welcome to the Course Materials Assistant! I can help you with questions about courses, lessons and specific content. What would you like to know?', 'assistant', null, true);
+        chatInput.value = '';
+        chatInput.focus();
+    }
 }
 
 // Load course statistics

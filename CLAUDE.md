@@ -15,16 +15,16 @@ echo "ANTHROPIC_API_KEY=your_key_here" > .env
 
 ### Running the Application
 ```bash
-# Quick start (recommended)
+# Quick start (recommended) (the server runs on port 9000)
 ./run.sh
 
 # Manual start
-cd backend && uv run uvicorn app:app --reload --port 8000
+cd backend && uv run uvicorn app:app --reload --port 9000
 ```
 
 ### Development Server Access
-- Web Interface: http://localhost:8000
-- API Documentation: http://localhost:8000/docs
+- Web Interface: http://localhost:9000
+- API Documentation: http://localhost:9000/docs
 
 ## Architecture Overview
 

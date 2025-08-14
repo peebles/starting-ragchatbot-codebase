@@ -42,10 +42,14 @@ class VectorStore:
             settings=Settings(anonymized_telemetry=False)
         )
         
-        # Set up sentence transformer embedding function
-        self.embedding_function = chromadb.utils.embedding_functions.SentenceTransformerEmbeddingFunction(
-            model_name=embedding_model
-        )
+        # Set up embedding function - try sentence transformer, fallback to default
+        try:
+            self.embedding_function = chromadb.utils.embedding_functions.SentenceTransformerEmbeddingFunction(
+                model_name=embedding_model
+            )
+        except Exception as e:
+            print(f"Warning: SentenceTransformer not available ({e}), using default embedding")
+            self.embedding_function = chromadb.utils.embedding_functions.DefaultEmbeddingFunction()
         
         # Create collections for different types of data
         self.course_catalog = self._create_collection("course_catalog")  # Course titles/instructors
